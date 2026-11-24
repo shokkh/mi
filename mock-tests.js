@@ -101,6 +101,9 @@
     let recordingStream = null;
     let recordingChunks = [];
     let recordingUrl = '';
+    let recordingBlob = null;
+    let recordedPartIndex = -1;
+    let recordingPartIndex = -1;
     let expiryHandled = false;
 
     function readSavedSession() {
@@ -241,6 +244,12 @@
         return `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;
     }
 
+    function formatAudioTime(seconds) {
+        if (!Number.isFinite(seconds)) return '0:00';
+        const value = Math.max(0, Math.floor(seconds));
+        return `${Math.floor(value / 60)}:${String(value % 60).padStart(2, '0')}`;
+    }
+
     function remaining() {
         if (!session) return 0;
         if (session.pausedAt) return session.pausedRemaining;
@@ -270,25 +279,12 @@
                     </select>
                 </label>
             </div>
-            ${renderResumeCard()}
             <div class="mock-view-tabs" role="tablist" aria-label="Mock test library">
                 <button type="button" class="${libraryView === 'full' ? 'active' : ''}" data-action="view" data-view="full">Full mock tests (3)</button>
                 <button type="button" class="${libraryView === 'skill' ? 'active' : ''}" data-action="view" data-view="skill">Individual skills</button>
             </div>
             ${libraryView === 'full' ? renderFullMocks() : renderSkillLibrary()}
             <p class="mock-content-note">${escapeHtml(bank.contentNotice || 'Practice materials are AI-authored and are not official IELTS content.')} Listening audio and Writing figures are included. IELTS Studio content is provided under the MIT license; details are in IELTS-STUDIO-LICENSE.txt.</p>
-        `;
-    }
-
-    function renderResumeCard() {
-        const saved = readSavedSession();
-        if (!saved) return '';
-        const skill = currentSkill(saved);
-        return `
-            <div class="mock-resume-card">
-                <p><strong>${escapeHtml(saved.title)}</strong> is unfinished · ${escapeHtml(skillLabels[skill])} · ${formatTime(Math.max(0, Math.ceil((saved.deadline - Date.now()) / 1000)))} remaining</p>
-                <button type="button" class="btn btn-primary" data-action="resume">Resume test</button>
-            </div>
         `;
     }
 
@@ -411,7 +407,6 @@
             paperId: papers.listening.id,
             partIndex: 0,
             answers: {},
-            flags: [],
             writingAnswers: {},
             speakingNotes: {},
             startedAt: Date.now(),
@@ -442,7 +437,6 @@
             paperId,
             partIndex: 0,
             answers: {},
-            flags: [],
             writingAnswers: {},
             speakingNotes: {},
             startedAt: Date.now(),
@@ -467,7 +461,6 @@
             paperId: 'famous-person-interview',
             partIndex: 0,
             answers: {},
-            flags: [],
             writingAnswers: {},
             speakingNotes: {},
             startedAt: Date.now(),
@@ -482,17 +475,6 @@
         renderExam();
     }
 
-    function resumeSession() {
-        const saved = readSavedSession();
-        if (!saved) {
-            notify('There is no unfinished mock to resume.');
-            return;
-        }
-        session = saved;
-        expiryHandled = false;
-        renderExam();
-    }
-
     function getParts() {
         if (session.skill === 'speaking') return speakingParts;
         const paper = currentPaper();
@@ -501,6 +483,7 @@
 
     function renderExam() {
         if (!session || session.status !== 'active') return;
+        stopListeningAudio();
         const parts = getParts();
         const part = parts[session.partIndex];
         const skill = session.skill;
@@ -527,16 +510,17 @@
                         <button type="button" class="btn btn-outline mock-small-button" data-action="exit">Exit</button>
                     </div>
                 </header>
-                <label class="mock-part-picker">Test section
-                    <select aria-label="Select test section" data-part-select>${partOptions}</select>
-                </label>
                 ${paused ? '<div class="mock-content-note">Practice paused. Resume when you are ready.</div>' : renderStage(skill, part)}
                 <footer class="mock-exam-footer">
                     <p>${skill === 'writing' ? 'Writing is not automatically band-scored.' : skill === 'speaking' ? 'Speaking is not automatically band-scored.' : `${answeredCount()} of ${questionCount()} questions answered`}</p>
                     <button type="button" class="btn btn-primary mock-submit" data-action="submit">${session.kind === 'full' && session.stageIndex < 2 ? `Submit ${skillLabels[skill]} and continue` : 'Submit test'} <i class="fas fa-arrow-right"></i></button>
                 </footer>
+                <label class="mock-part-picker">Test section
+                    <select aria-label="Select test section" data-part-select>${partOptions}</select>
+                </label>
             </section>
         `;
+        initializeListeningAudio();
         persistSession();
     }
 
@@ -551,7 +535,13 @@
         const passage = skill === 'reading'
             ? `<div class="mock-passage-content"><p><strong>${escapeHtml(part.title)}</strong></p>${String(part.content || '').split(/\n\s*\n/).map(text => `<p>${escapeHtml(text)}</p>`).join('')}</div>`
             : `<div class="mock-passage-content"><p>${escapeHtml(part.title)}</p><p>Answer the questions as you listen to this recording.</p></div>
-               ${part.audio ? `<audio class="mock-audio" controls preload="metadata" src="${escapeHtml(assetPath(part.audio))}">Your browser does not support audio playback.</audio>` : '<p class="mock-content-note">Audio is unavailable for this section.</p>'}`;
+               ${part.audio ? `<div class="mock-listening-audio">
+                    <button type="button" class="btn btn-primary mock-audio-button" data-action="toggle-listening-audio" aria-label="Play listening audio" aria-pressed="false">
+                        <i class="fas fa-volume-up" aria-hidden="true"></i> Play audio
+                    </button>
+                    <span class="mock-audio-status" role="status">0:00 / 0:00</span>
+                  </div>
+                  <audio class="mock-audio" preload="metadata" src="${escapeHtml(assetPath(part.audio))}" hidden>Your browser does not support audio playback.</audio>` : '<p class="mock-content-note">Audio is unavailable for this section.</p>'}`;
         const questions = renderQuestionGroups(part.groups || []);
         return `
             <div class="mock-exam-grid">
@@ -597,10 +587,7 @@
                 </span>
             `;
         }).join('');
-        const flags = group.questions.map(question => `
-            <label class="mock-flag"><input type="checkbox" data-flag="${escapeHtml(question.id)}" ${session.flags.includes(question.id) ? 'checked' : ''}> Flag question ${question.number} for review</label>
-        `).join('');
-        return `<div class="mock-question"><div class="mock-gap-prompt">${prompt}</div><div class="mock-gap-flags">${flags}</div></div>`;
+        return `<div class="mock-question"><div class="mock-gap-prompt">${prompt}</div></div>`;
     }
 
     function renderQuestion(group, question) {
@@ -631,15 +618,10 @@
             answerControl = `<input class="mock-answer-input" type="text" autocomplete="off" spellcheck="false" aria-label="Answer question ${question.number}" value="${escapeHtml(answer)}" data-answer="${escapeHtml(question.id)}" placeholder="${escapeHtml(group.wordLimit ? `${group.wordLimit} word${group.wordLimit === 1 ? '' : 's'} maximum` : 'Type your answer')}">`;
         }
 
-        const cellInfo = question.cells && question.cells.length
-            ? `<p class="mock-instructions">${question.cells.map(escapeHtml).join(' · ')}</p>`
-            : '';
         return `
             <div class="mock-question">
                 <label class="mock-question-label"><span class="mock-question-number">${question.number}.</span><span>${escapeHtml(text)}</span></label>
-                ${cellInfo}
                 ${answerControl}
-                <label class="mock-flag"><input type="checkbox" data-flag="${escapeHtml(question.id)}" ${session.flags.includes(question.id) ? 'checked' : ''}> Flag for review</label>
             </div>
         `;
     }
@@ -672,6 +654,12 @@
                     <h3>Your response</h3>
                     <textarea class="mock-writing-answer" data-writing-answer="${escapeHtml(task.id)}" aria-label="${escapeHtml(task.title)} response" spellcheck="false" placeholder="Begin your response here...">${escapeHtml(answer)}</textarea>
                     <div class="mock-word-count"><span id="writing-count">${wordCount(answer)}</span>&nbsp;words · minimum ${task.minWords}</div>
+                    <div class="mock-ai-feedback">
+                        <label><input type="checkbox" data-ai-consent> I agree to send this response to OpenAI for feedback. Do not include personal or sensitive information.</label>
+                        <button class="btn btn-outline" type="button" data-action="ai-feedback" data-feedback-skill="writing" data-task-id="${escapeHtml(task.id)}">Get AI feedback</button>
+                        <p class="mock-feedback-status" role="status" aria-live="polite" hidden></p>
+                        <div class="mock-feedback-result" aria-live="polite"></div>
+                    </div>
                 </section>
             </div>
         `;
@@ -715,6 +703,12 @@
                     <div class="mock-recording-controls">
                         <button class="btn btn-outline" type="button" data-action="record"><i class="fas fa-microphone"></i> Start recording</button>
                         <audio class="mock-recording-preview" controls hidden></audio>
+                    </div>
+                    <div class="mock-ai-feedback">
+                        <label><input type="checkbox" data-ai-consent> I agree to send this recording to OpenAI for transcription and feedback. Do not include personal or sensitive information.</label>
+                        <button class="btn btn-outline" type="button" data-action="ai-feedback" data-feedback-skill="speaking">Get AI feedback</button>
+                        <p class="mock-feedback-status" role="status" aria-live="polite" hidden></p>
+                        <div class="mock-feedback-result" aria-live="polite"></div>
                     </div>
                 </section>
             </div>
@@ -827,9 +821,9 @@
     function submitStage(force) {
         if (!session || session.status !== 'active') return;
         if (!force && session.skill !== 'speaking' && !window.confirm(`Submit ${skillLabels[session.skill]}? You cannot edit this section afterwards.`)) return;
+        stopListeningAudio();
         const result = scoreCurrentStage();
         session.results.push(result);
-        recordCompletedMock(result);
         stopRecording();
         if (session.kind === 'full' && session.stageIndex < session.sequence.length - 1) {
             session.stageIndex += 1;
@@ -837,7 +831,6 @@
             session.paperId = session.paperIds[session.skill];
             session.partIndex = 0;
             session.answers = {};
-            session.flags = [];
             session.startedAt = Date.now();
             session.deadline = Date.now() + durationFor(session.skill, currentPaper()) * 1000;
             session.pausedAt = null;
@@ -846,6 +839,7 @@
             renderExam();
             return;
         }
+        session.results.forEach(completedResult => recordCompletedMock(completedResult));
         session.status = 'complete';
         persistSession();
         renderResults();
@@ -862,6 +856,7 @@
         } else {
             return;
         }
+        stopListeningAudio();
         stopRecording();
         renderLibrary();
     }
@@ -926,8 +921,6 @@
         } else if (action === 'start-speaking') {
             currentSetMode();
             startSpeaking();
-        } else if (action === 'resume') {
-            resumeSession();
         } else if (action === 'submit') {
             submitStage();
         } else if (action === 'exit') {
@@ -940,7 +933,68 @@
             renderLibrary();
         } else if (action === 'record') {
             toggleRecording(button);
+        } else if (action === 'ai-feedback') {
+            requestAIFeedback(button);
+        } else if (action === 'toggle-listening-audio') {
+            toggleListeningAudio(button);
         }
+    }
+
+    function initializeListeningAudio() {
+        const audio = root.querySelector('.mock-audio');
+        if (!audio) return;
+        const updateControls = () => updateListeningAudioControls(audio);
+        audio.addEventListener('loadedmetadata', updateControls);
+        audio.addEventListener('timeupdate', updateControls);
+        audio.addEventListener('play', updateControls);
+        audio.addEventListener('pause', updateControls);
+        audio.addEventListener('ended', updateControls);
+        audio.addEventListener('error', () => {
+            const button = root.querySelector('[data-action="toggle-listening-audio"]');
+            const status = root.querySelector('.mock-audio-status');
+            if (button) button.disabled = false;
+            if (status) status.textContent = 'Listening audio could not be loaded.';
+        });
+        updateControls();
+    }
+
+    function toggleListeningAudio(button) {
+        const audio = root.querySelector('.mock-audio');
+        if (!audio) {
+            notify('Listening audio is unavailable for this section.');
+            return;
+        }
+        if (!audio.paused && !audio.ended) return;
+        if (audio.ended) audio.currentTime = 0;
+        button.disabled = true;
+        const playback = audio.play();
+        if (playback && typeof playback.catch === 'function') {
+            playback.then(() => updateListeningAudioControls(audio, button)).catch(error => {
+                console.error('Unable to play listening audio.', error);
+                button.disabled = false;
+                updateListeningAudioControls(audio, button);
+                notify('Listening audio could not be played in this browser.');
+            });
+        } else {
+            updateListeningAudioControls(audio, button);
+        }
+    }
+
+    function updateListeningAudioControls(audio, button = root.querySelector('[data-action="toggle-listening-audio"]')) {
+        const status = root.querySelector('.mock-audio-status');
+        if (!button) return;
+        const isPlaying = !audio.paused && !audio.ended;
+        const label = isPlaying ? 'Playing audio' : audio.ended ? 'Replay audio' : audio.currentTime > 0 ? 'Continue audio' : 'Play audio';
+        button.innerHTML = `<i class="fas ${isPlaying ? 'fa-volume-up' : 'fa-play'}" aria-hidden="true"></i> ${label}`;
+        button.disabled = isPlaying;
+        button.setAttribute('aria-label', `${label} for listening section`);
+        button.setAttribute('aria-pressed', String(isPlaying));
+        if (status) status.textContent = `${formatAudioTime(audio.currentTime)} / ${formatAudioTime(audio.duration)}`;
+    }
+
+    function stopListeningAudio() {
+        const audio = root.querySelector('.mock-audio');
+        if (audio) audio.pause();
     }
 
     function handleInput(event) {
@@ -968,12 +1022,6 @@
         } else if (target.dataset.answer) {
             session.answers[target.dataset.answer] = target.value;
             persistSession();
-        } else if (target.dataset.flag) {
-            const id = target.dataset.flag;
-            session.flags = target.checked
-                ? Array.from(new Set([...session.flags, id]))
-                : session.flags.filter(flag => flag !== id);
-            persistSession();
         } else if (target.id === 'mock-mode') {
             selectedMode = target.value;
         }
@@ -992,13 +1040,23 @@
         try {
             recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
             recordingChunks = [];
-            recorder = new MediaRecorder(recordingStream);
+            recordingBlob = null;
+            recordedPartIndex = -1;
+            recordingPartIndex = session && session.skill === 'speaking' ? session.partIndex : -1;
+            const preferredMimeType = typeof MediaRecorder.isTypeSupported === 'function'
+                ? ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm'].find(type => MediaRecorder.isTypeSupported(type))
+                : '';
+            recorder = preferredMimeType
+                ? new MediaRecorder(recordingStream, { mimeType: preferredMimeType })
+                : new MediaRecorder(recordingStream);
             recorder.addEventListener('dataavailable', event => {
                 if (event.data.size) recordingChunks.push(event.data);
             });
             recorder.addEventListener('stop', () => {
                 if (recordingUrl) URL.revokeObjectURL(recordingUrl);
-                recordingUrl = URL.createObjectURL(new Blob(recordingChunks, { type: recorder.mimeType || 'audio/webm' }));
+                recordingBlob = new Blob(recordingChunks, { type: recorder.mimeType || 'audio/webm' });
+                recordedPartIndex = recordingPartIndex;
+                recordingUrl = URL.createObjectURL(recordingBlob);
                 const preview = root.querySelector('.mock-recording-preview');
                 if (preview) {
                     preview.src = recordingUrl;
@@ -1011,6 +1069,138 @@
             button.innerHTML = '<i class="fas fa-stop"></i> Stop recording';
         } catch (error) {
             notify(`Microphone could not start: ${error.message}`);
+        }
+    }
+
+    function setFeedbackStatus(container, message, isError) {
+        const status = container.querySelector('.mock-feedback-status');
+        status.textContent = message;
+        status.classList.toggle('error', isError);
+        status.hidden = !message;
+    }
+
+    function appendFeedbackSection(container, title, values) {
+        if (!values.length) return;
+        const section = document.createElement('section');
+        const heading = document.createElement('h4');
+        heading.textContent = title;
+        const list = document.createElement('ul');
+        values.forEach(value => {
+            const item = document.createElement('li');
+            item.textContent = value;
+            list.append(item);
+        });
+        section.append(heading, list);
+        container.append(section);
+    }
+
+    function renderAIFeedback(container, feedback, transcript) {
+        const result = container.querySelector('.mock-feedback-result');
+        result.replaceChildren();
+        if (transcript) {
+            const transcriptSection = document.createElement('section');
+            const transcriptHeading = document.createElement('h4');
+            const transcriptText = document.createElement('p');
+            transcriptHeading.textContent = 'Speech transcript';
+            transcriptText.textContent = transcript;
+            transcriptSection.append(transcriptHeading, transcriptText);
+            result.append(transcriptSection);
+        }
+        const summary = document.createElement('p');
+        summary.className = 'mock-feedback-summary';
+        summary.textContent = feedback.summary;
+        result.append(summary);
+        appendFeedbackSection(result, 'What went well', feedback.strengths);
+        appendFeedbackSection(result, 'Try improving', feedback.improvements);
+        const nextPractice = document.createElement('p');
+        nextPractice.textContent = `Next practice: ${feedback.nextPractice}`;
+        result.append(nextPractice);
+    }
+
+    async function blobToBase64(blob) {
+        if (blob.size > 2_000_000) throw new Error('The recording is larger than 2 MB. Record a shorter response.');
+        const bytes = new Uint8Array(await blob.arrayBuffer());
+        let binary = '';
+        const chunkSize = 0x8000;
+        for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+            binary += String.fromCharCode(...bytes.subarray(offset, offset + chunkSize));
+        }
+        return btoa(binary);
+    }
+
+    async function requestAIFeedback(button) {
+        const container = button.closest('.mock-ai-feedback');
+        const consent = container.querySelector('[data-ai-consent]');
+        if (!consent.checked) {
+            setFeedbackStatus(container, 'Check the consent box before sending your response.', true);
+            return;
+        }
+
+        const skill = button.dataset.feedbackSkill;
+        let prompt;
+        let answer;
+        let audioBlob;
+        let audioBase64;
+        let mimeType;
+        if (skill === 'writing') {
+            const task = currentPaper().tasks.find(item => item.id === button.dataset.taskId);
+            answer = task ? session.writingAnswers[task.id] || '' : '';
+            if (!task || !answer.trim()) {
+                setFeedbackStatus(container, 'Write a response before requesting feedback.', true);
+                return;
+            }
+            prompt = `${task.title}\n${task.prompt}`;
+        } else {
+            if (!recordingBlob || recordedPartIndex !== session.partIndex) {
+                setFeedbackStatus(container, 'Record and stop your answer for this speaking part before requesting feedback.', true);
+                return;
+            }
+            if (!speakingParts[session.partIndex]) {
+                setFeedbackStatus(container, 'The speaking prompt could not be found.', true);
+                return;
+            }
+            prompt = [
+                speakingParts[session.partIndex].title,
+                speakingParts[session.partIndex].topic || '',
+                ...(speakingParts[session.partIndex].questions || []),
+                ...(speakingParts[session.partIndex].cues || [])
+            ].filter(Boolean).join('\n');
+            audioBlob = recordingBlob;
+            mimeType = audioBlob.type.split(';')[0];
+        }
+
+        const originalLabel = button.textContent;
+        button.disabled = true;
+        button.textContent = 'Getting feedback…';
+        setFeedbackStatus(container, '', false);
+        try {
+            await window.ieltsAccountReady;
+            if (!window.ieltsAccount) throw new Error('Cloud account services are not configured on this host.');
+            const token = await window.ieltsAccount.getIdToken();
+            const payload = { skill, prompt, consent: true };
+            if (skill === 'writing') payload.answer = answer;
+            else {
+                audioBase64 = await blobToBase64(audioBlob);
+                Object.assign(payload, { audioBase64, mimeType });
+            }
+            const response = await fetch('/api/feedback', {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(result.error || 'AI feedback is temporarily unavailable.');
+            renderAIFeedback(container, result.feedback, result.transcript);
+            setFeedbackStatus(container, `${result.remainingToday} AI feedback requests remaining today.`, false);
+        } catch (error) {
+            console.error('AI feedback request failed.', error);
+            setFeedbackStatus(container, error.message || 'AI feedback is temporarily unavailable. Please try again later.', true);
+        } finally {
+            button.disabled = false;
+            button.textContent = originalLabel;
         }
     }
 
@@ -1043,7 +1233,6 @@
         if (!session.results) session.results = [];
         if (!session.writingAnswers) session.writingAnswers = {};
         if (!session.speakingNotes) session.speakingNotes = {};
-        if (!session.flags) session.flags = [];
     }
     render();
     startTimer();

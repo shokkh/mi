@@ -23,6 +23,7 @@
                 <li><a href="#" class="nav-link active" data-page="dashboard"><i class="fas fa-chart-pie"></i>Overview</a></li>
                 <li><a href="#" class="nav-link" data-page="vocabulary"><i class="fas fa-book-open"></i>Vocabulary</a></li>
                 <li><a href="#" class="nav-link" data-page="podcasts"><i class="fas fa-podcast"></i>English Podcasts</a></li>
+                <li><a href="#" class="nav-link" data-page="cefr"><i class="fas fa-layer-group"></i>CEFR</a></li>
                 <li><a href="#" class="nav-link" data-page="mock-test"><i class="fas fa-list-check"></i>Mock tests</a></li>
                 <li class="sidebar-guide-item">
                     <div class="sidebar-guide">
@@ -420,21 +421,120 @@
         </div>
     </div>
 
+    <!-- CEFR Page -->
+    <div id="cefr" class="page">
+        <div class="container">
+            <div class="section-header">
+                <div>
+                    <h1 class="section-title">CEFR Levels</h1>
+                    <p class="section-subtitle">Choose a level and practise with an original CEFR mini mock.</p>
+                </div>
+            </div>
+
+            <section class="cefr-intro card">
+                <div class="cefr-intro-icon"><i class="fas fa-layer-group"></i></div>
+                <div>
+                    <h2>Common European Framework of Reference</h2>
+                    <p>Each level includes listening, reading, language questions, plus writing and speaking practice prompts.</p>
+                </div>
+            </section>
+
+            <div class="cefr-grid">
+                <article class="cefr-card cefr-a1">
+                    <span class="cefr-code">A1</span>
+                    <div><h2>Beginner</h2><p>Understand and use familiar everyday expressions and simple phrases.</p></div>
+                    <span class="cefr-focus">Basic communication</span>
+                    <button class="btn btn-primary cefr-start-button" type="button" data-cefr-start="A1">Open A1 practice <i class="fas fa-arrow-right"></i></button>
+                </article>
+                <article class="cefr-card cefr-a2">
+                    <span class="cefr-code">A2</span>
+                    <div><h2>Elementary</h2><p>Communicate in simple, routine situations that require a direct exchange of information.</p></div>
+                    <span class="cefr-focus">Everyday conversations</span>
+                    <button class="btn btn-primary cefr-start-button" type="button" data-cefr-start="A2">Open A2 practice <i class="fas fa-arrow-right"></i></button>
+                </article>
+                <article class="cefr-card cefr-b1">
+                    <span class="cefr-code">B1</span>
+                    <div><h2>Intermediate</h2><p>Deal with most situations while travelling and describe experiences, events, and plans.</p></div>
+                    <span class="cefr-focus">Independent use</span>
+                    <button class="btn btn-primary cefr-start-button" type="button" data-cefr-start="B1">Open B1 practice <i class="fas fa-arrow-right"></i></button>
+                </article>
+                <article class="cefr-card cefr-b2">
+                    <span class="cefr-code">B2</span>
+                    <div><h2>Upper-intermediate</h2><p>Understand the main ideas of complex text and interact with fluency and spontaneity.</p></div>
+                    <span class="cefr-focus">Confident communication</span>
+                    <button class="btn btn-primary cefr-start-button" type="button" data-cefr-start="B2">Open B2 practice <i class="fas fa-arrow-right"></i></button>
+                </article>
+                <article class="cefr-card cefr-c1">
+                    <span class="cefr-code">C1</span>
+                    <div><h2>Advanced</h2><p>Express ideas fluently and use English flexibly for social, academic, and professional purposes.</p></div>
+                    <span class="cefr-focus">Effective precision</span>
+                    <button class="btn btn-primary cefr-start-button" type="button" data-cefr-start="C1">Open C1 practice <i class="fas fa-arrow-right"></i></button>
+                </article>
+                <article class="cefr-card cefr-c2">
+                    <span class="cefr-code">C2</span>
+                    <div><h2>Proficient</h2><p>Understand virtually everything heard or read and express yourself precisely in demanding contexts.</p></div>
+                    <span class="cefr-focus">Near-native mastery</span>
+                    <button class="btn btn-primary cefr-start-button" type="button" data-cefr-start="C2">Open C2 practice <i class="fas fa-arrow-right"></i></button>
+                </article>
+            </div>
+        </div>
+    </div>
+
+    <div id="cefr-level-tests" class="page">
+        <div class="container">
+            <div id="cefr-level-root"></div>
+        </div>
+    </div>
+
+    <div id="cefr-mock" class="page">
+        <div class="container">
+            <div class="section-header">
+                <div>
+                    <h1 class="section-title">CEFR Mock Test</h1>
+                    <p class="section-subtitle">A separate timed mock for the skill you selected.</p>
+                </div>
+            </div>
+            <div id="cefr-mock-root" aria-live="polite"></div>
+        </div>
+    </div>
+
     <!-- Profile Page -->
     <div id="profile" class="page">
         <div class="container">
             <div class="section-header">
                 <div>
                     <h1 class="section-title">Your Profile</h1>
-                    <p class="section-subtitle">A quick look at your IELTS practice on this device.</p>
+                    <p class="section-subtitle">Your IELTS practice, synced when you sign in.</p>
                 </div>
             </div>
+
+            <section class="profile-account-card" aria-labelledby="accountTitle">
+                <h2 id="accountTitle">Cloud account</h2>
+                <p id="accountSummary" class="profile-note">Checking account services…</p>
+                <form id="accountSignInForm" class="account-sign-in-form">
+                    <div class="profile-name-field">
+                        <label for="accountEmail">Email</label>
+                        <input id="accountEmail" name="email" type="email" autocomplete="email" required>
+                    </div>
+                    <div class="profile-name-field">
+                        <label for="accountPassword">Password</label>
+                        <input id="accountPassword" name="password" type="password" minlength="8" autocomplete="current-password" required>
+                    </div>
+                    <div class="account-actions">
+                        <button class="btn btn-primary" type="submit" data-account-action="signin">Sign in</button>
+                        <button class="btn btn-outline" type="button" data-account-action="signup">Create account</button>
+                        <button class="btn btn-outline account-google-button" type="button" data-account-action="google"><i class="fab fa-google" aria-hidden="true"></i> Continue with Google</button>
+                    </div>
+                </form>
+                <button class="btn btn-outline" id="accountSignOut" type="button" hidden>Sign out</button>
+                <p class="profile-status" id="accountStatus" role="status" aria-live="polite" hidden></p>
+            </section>
 
             <section class="profile-overview-card" aria-label="Study profile">
                 <span class="profile-avatar-large" data-profile-initial aria-hidden="true">S</span>
                 <div>
                     <h2 id="profileDisplayName" data-profile-name>Student</h2>
-                    <p><i class="fas fa-graduation-cap" aria-hidden="true"></i> IELTS Academic · Local profile</p>
+                    <p><i class="fas fa-graduation-cap" aria-hidden="true"></i> IELTS Academic · Study profile</p>
                 </div>
             </section>
 
@@ -481,7 +581,7 @@
                 </article>
             </div>
 
-            <p class="profile-note">Practice progress is saved locally in this browser. No account or sign-in is connected.</p>
+            <p class="profile-note">Your practice remains available on this device. Sign in to sync your profile and progress to your account.</p>
             <button class="lime-button" type="button" onclick="showPage('dashboard')">Back to Overview<i class="fas fa-arrow-left"></i></button>
         </div>
     </div>
@@ -503,6 +603,8 @@
     <script src="mock-bank.js"></script>
     <script src="ielts-master.js"></script>
     <script src="vocabulary.js"></script>
+    <script src="cefr-tests.js"></script>
     <script src="mock-tests.js"></script>
+    <script type="module" src="account.js"></script>
 </body>
 </html>

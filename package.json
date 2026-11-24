@@ -1,0 +1,15 @@
+{
+  "name": "ielts-master",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "check": "node --check api/firebase-config.js && node --check api/feedback.js && node --check mock-tests.js && node --check ielts-master.js && node --check cefr-tests.js && node --input-type=module --check < account.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "firebase-admin": "^14.5.1"
+  }
+}

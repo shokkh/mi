@@ -2,7 +2,7 @@
   "redirects": [
     {
       "source": "/",
-      "destination": "/ielts-master.html",
+      "destination": "/ielts-master",
       "permanent": false
     }
   ]

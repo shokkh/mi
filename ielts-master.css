@@ -614,6 +614,345 @@
             margin-top: 1.25rem;
         }
 
+        .cefr-intro {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            background: var(--primary-light);
+        }
+
+        .cefr-intro-icon {
+            display: flex;
+            width: 48px;
+            height: 48px;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+            border-radius: 12px;
+            background: var(--primary-color);
+            color: #fff;
+            font-size: 1.2rem;
+        }
+
+        .cefr-intro h2 {
+            color: var(--text-primary);
+            font-size: 1.1rem;
+        }
+
+        .cefr-intro p,
+        .cefr-card p {
+            margin-top: 0.35rem;
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+            line-height: 1.7;
+        }
+
+        .cefr-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .cefr-card {
+            display: grid;
+            grid-template-columns: 58px minmax(0, 1fr);
+            gap: 1rem;
+            align-items: start;
+            padding: 1.3rem;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: var(--card-bg);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .cefr-start-button {
+            grid-column: 2;
+            justify-self: start;
+        }
+
+        .cefr-skill-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .cefr-skill-card {
+            display: grid;
+            grid-template-columns: 48px minmax(0, 1fr);
+            gap: 1rem;
+            align-items: start;
+            padding: 1.25rem;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: var(--card-bg);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .cefr-skill-icon {
+            display: flex;
+            width: 48px;
+            height: 48px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: var(--primary-light);
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+
+        .cefr-skill-card h2 {
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        .cefr-skill-card p {
+            margin-top: 0.35rem;
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+            line-height: 1.6;
+        }
+
+        .cefr-skill-meta {
+            display: inline-block;
+            margin-top: 0.65rem;
+            color: var(--primary-color);
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .cefr-skill-card > .btn {
+            grid-column: 2;
+            justify-self: start;
+        }
+
+        #cefr-mock-root {
+            margin-top: 1.5rem;
+        }
+
+        .cefr-mock-card,
+        .cefr-mock-result {
+            padding: clamp(1rem, 3vw, 1.75rem);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            background: var(--card-bg);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .cefr-mock-top,
+        .cefr-mock-actions,
+        .cefr-mock-progress {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .cefr-mock-top {
+            margin-bottom: 1.25rem;
+        }
+
+        .cefr-mock-identity,
+        .cefr-mock-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .cefr-mock-controls {
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .cefr-mock-top h2,
+        .cefr-mock-result h2 {
+            color: var(--text-primary);
+        }
+
+        .cefr-mock-level {
+            display: inline-flex;
+            min-width: 46px;
+            height: 46px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: var(--primary-light);
+            color: var(--primary-color);
+            font-weight: 800;
+        }
+
+        .cefr-mock-timer {
+            color: var(--text-secondary);
+            font-variant-numeric: tabular-nums;
+            font-weight: 700;
+        }
+
+        .cefr-mock-section {
+            margin-top: 1.25rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .cefr-mock-section h3 {
+            margin-bottom: 0.8rem;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        .cefr-unscored-label {
+            color: var(--text-secondary);
+            font-size: 0.72rem;
+            font-weight: 500;
+        }
+
+        .cefr-practice-task {
+            margin-top: 0.85rem;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+        }
+
+        .cefr-practice-task p {
+            margin: 0.45rem 0 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.65;
+        }
+
+        .cefr-practice-task label {
+            display: block;
+            margin: 0.75rem 0 0.35rem;
+            color: var(--text-primary);
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+
+        .cefr-practice-task textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--card-bg);
+            color: var(--text-primary);
+            font: inherit;
+            resize: vertical;
+        }
+
+        .cefr-listening-control {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .cefr-reading-text {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-left: 3px solid var(--primary-color);
+            border-radius: 0 10px 10px 0;
+            background: var(--primary-light);
+            color: var(--text-primary);
+            line-height: 1.75;
+        }
+
+        .cefr-question {
+            margin: 0 0 1rem;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+        }
+
+        .cefr-question legend {
+            padding: 0 0.25rem;
+            color: var(--text-primary);
+            font-weight: 700;
+            line-height: 1.55;
+        }
+
+        .cefr-answer-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+            margin-top: 0.65rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            line-height: 1.5;
+        }
+
+        .cefr-answer-option input {
+            margin-top: 0.25rem;
+            accent-color: var(--primary-color);
+        }
+
+        .cefr-mock-progress {
+            margin: 1.1rem 0;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .cefr-mock-status {
+            min-height: 1.4rem;
+            margin: 0.5rem 0;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .cefr-mock-result-score {
+            margin: 0.8rem 0;
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        .cefr-review-item {
+            margin-top: 0.75rem;
+            padding: 0.85rem 1rem;
+            border-radius: 10px;
+            background: var(--primary-light);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .cefr-review-item.is-incorrect {
+            border-left: 3px solid #be123c;
+        }
+
+        .cefr-review-item.is-correct {
+            border-left: 3px solid #0f766e;
+        }
+
+        .cefr-card h2 {
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        .cefr-code {
+            display: inline-flex;
+            width: 58px;
+            height: 58px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            color: #fff;
+            font-size: 1.15rem;
+            font-weight: 800;
+        }
+
+        .cefr-focus {
+            grid-column: 2;
+            color: var(--primary-color);
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+
+        .cefr-a1 .cefr-code { background: #64748b; }
+        .cefr-a2 .cefr-code { background: #0f766e; }
+        .cefr-b1 .cefr-code { background: #2563eb; }
+        .cefr-b2 .cefr-code { background: #7c3aed; }
+        .cefr-c1 .cefr-code { background: #c2410c; }
+        .cefr-c2 .cefr-code { background: #be123c; }
+
         .profile-overview-card {
             display: flex;
             align-items: center;
@@ -662,6 +1001,45 @@
             align-items: flex-end;
             gap: 0.75rem;
             margin-bottom: 1.5rem;
+        }
+
+        .profile-account-card {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            background: var(--card-bg);
+        }
+
+        .profile-account-card h2 {
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        .account-sign-in-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            align-items: end;
+            gap: 0.75rem;
+        }
+
+        .account-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.65rem;
+            grid-column: 1 / -1;
+        }
+
+        .account-google-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #accountSignOut[hidden] {
+            display: none;
         }
 
         .profile-name-field {
@@ -2220,8 +2598,35 @@
 
             .studio-overview,
             .dashboard-grid,
-            .vocab-grid {
+            .vocab-grid,
+            .cefr-grid,
+            .cefr-skill-grid {
                 grid-template-columns: minmax(0, 1fr);
+            }
+
+            .cefr-intro {
+                align-items: flex-start;
+            }
+
+            .cefr-card {
+                grid-template-columns: 48px minmax(0, 1fr);
+                gap: 0.75rem;
+                padding: 1rem;
+            }
+
+            .cefr-code {
+                width: 48px;
+                height: 48px;
+            }
+
+            .cefr-mock-top,
+            .cefr-mock-actions {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .cefr-mock-controls {
+                justify-content: flex-start;
             }
 
             .vocab-toolbar {

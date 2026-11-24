@@ -300,6 +300,7 @@ function saveProfile(name, targetBand, statusId) {
     applyProfile(profile);
     const dialog = document.getElementById('onboardingDialog');
     if (dialog.open) dialog.close();
+    window.dispatchEvent(new Event('ielts:profile-updated'));
     if (statusId) showProfileStatus('Profile saved on this device.', false, statusId);
     return true;
 }
@@ -324,6 +325,10 @@ function refreshMockProgress() {
 }
 
 window.addEventListener('ielts:mock-progress-updated', refreshMockProgress);
+window.addEventListener('ielts:cloud-data-updated', event => {
+    if (event.detail && event.detail.profile) applyProfile(event.detail.profile);
+    refreshMockProgress();
+});
 window.addEventListener('storage', event => {
     if (event.key === mockProgressStorageKey || event.key === mockActivityStorageKey || event.key === null) {
         refreshMockProgress();
@@ -369,6 +374,9 @@ window.addEventListener('storage', event => {
                 dashboard: 'Overview',
                 vocabulary: 'Vocabulary',
                 podcasts: 'English Podcasts',
+                cefr: 'CEFR',
+                'cefr-level-tests': 'CEFR Practice',
+                'cefr-mock': 'CEFR Mock Test',
                 profile: 'Profile',
                 'mock-test': 'Mock tests'
             };
@@ -382,6 +390,7 @@ window.addEventListener('storage', event => {
 
             // Initialize chart if dashboard
             if (pageName === 'dashboard') {
+                renderSkillProgress();
                 setTimeout(initChart, 100);
             }
         }
